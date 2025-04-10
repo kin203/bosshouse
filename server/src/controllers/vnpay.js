@@ -56,8 +56,8 @@ export const createPaymentUrl = async (req, res) => {
         vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
 
         // console.log(vnpUrl)
-        res.redirect(vnpUrl)
-        // return res.status(200).json(vnpUrl);
+        // res.redirect(vnpUrl)
+        res.status(200).json({ redirectUrl: vnpUrl });
     } catch (error) {
         return res.status(500).json({
             message: error.message,
