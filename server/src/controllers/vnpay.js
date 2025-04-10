@@ -57,7 +57,7 @@ export const createPaymentUrl = async (req, res) => {
 
         // console.log(vnpUrl)
         // res.redirect(vnpUrl)
-        res.status(200).json({ redirectUrl: vnpUrl });
+        return res.status(200).json({ redirectUrl: vnpUrl });
     } catch (error) {
         return res.status(500).json({
             message: error.message,
