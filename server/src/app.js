@@ -27,7 +27,15 @@ dotenv.config();
 
 const port = process.env.PORT || "3001";
 const app = express();
-app.use(cors());
+// app.use(cors());
+
+app.use(cors({
+  origin: 'https://fe-bosshouse.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200 // Một số trình duyệt cần này
+}));
 app.use(express.json());
 
 app.use("/products", ProductRouter);
