@@ -3,66 +3,127 @@ import querystring from 'qs';
 import crypto from 'crypto';
 import axios from 'axios'
 
+// export const createPaymentUrl = async (req, res) => {
+//     try {
+//         process.env.TZ = 'Asia/Ho_Chi_Minh';
+//         let date = new Date();
+//         let createDate = moment(date).format('YYYYMMDDHHmmss');
+
+//         let ipAddr = req.headers['x-forwarded-for'] ||
+//             req.connection.remoteAddress ||
+//             req.socket.remoteAddress ||
+//             req.connection.socket.remoteAddress;
+
+//         let tmnCode = process.env.vnp_TmnCode;
+//         let secretKey = process.env.vnp_HashSecret;
+//         let vnpUrl = process.env.vnp_Url;
+//         let returnUrl = process.env.vnp_ReturnUrl;
+
+//         let orderId = req.body.orderId;
+//         let amount = req.body.amount;
+//         let bankCode = req.body.bankCode;
+
+//         // let orderInfo = req.body.orderDescription;
+//         // let orderType = req.body.orderType;
+//         let locale = req.body.language;
+//         if (locale === null || locale === '') {
+//             locale = 'vn';
+//         }
+//         let currCode = 'VND';
+//         let vnp_Params = {};
+//         vnp_Params['vnp_Version'] = '2.1.0';
+//         vnp_Params['vnp_Command'] = 'pay';
+//         vnp_Params['vnp_TmnCode'] = tmnCode;
+//         vnp_Params['vnp_Locale'] = locale;
+//         vnp_Params['vnp_CurrCode'] = currCode;
+//         vnp_Params['vnp_TxnRef'] = orderId;
+//         vnp_Params['vnp_OrderInfo'] = orderId;
+//         vnp_Params['vnp_OrderType'] = 'other';
+//         vnp_Params['vnp_Amount'] = amount * 100;
+//         vnp_Params['vnp_ReturnUrl'] = returnUrl;
+//         vnp_Params['vnp_IpAddr'] = ipAddr;
+//         vnp_Params['vnp_CreateDate'] = createDate;
+//         if (bankCode !== null && bankCode !== '') {
+//             vnp_Params['vnp_BankCode'] = bankCode;
+//         }
+
+//         vnp_Params = sortObject(vnp_Params);
+
+//         let signData = querystring.stringify(vnp_Params, { encode: false });
+//         let hmac = crypto.createHmac("sha512", secretKey);
+//         let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
+//         vnp_Params['vnp_SecureHash'] = signed;
+//         vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
+
+//         // console.log(vnpUrl)
+//         res.redirect(vnpUrl)
+//         // return res.status(200).json(vnpUrl);
+//     } catch (error) {
+//         return res.status(500).json({
+//             message: error.message,
+//         });
+//     }
+// };
+
 export const createPaymentUrl = async (req, res) => {
-    try {
-        process.env.TZ = 'Asia/Ho_Chi_Minh';
-        let date = new Date();
-        let createDate = moment(date).format('YYYYMMDDHHmmss');
+  try {
+    // 1. Kiểm tra CORS
+    res.header('Access-Control-Allow-Origin', 'https://fe-bosshouse.vercel.app');
+    res.header('Access-Control-Allow-Methods', 'POST');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
 
-        let ipAddr = req.headers['x-forwarded-for'] ||
-            req.connection.remoteAddress ||
-            req.socket.remoteAddress ||
-            req.connection.socket.remoteAddress;
-
-        let tmnCode = process.env.vnp_TmnCode;
-        let secretKey = process.env.vnp_HashSecret;
-        let vnpUrl = process.env.vnp_Url;
-        let returnUrl = process.env.vnp_ReturnUrl;
-
-        let orderId = req.body.orderId;
-        let amount = req.body.amount;
-        let bankCode = req.body.bankCode;
-
-        // let orderInfo = req.body.orderDescription;
-        // let orderType = req.body.orderType;
-        let locale = req.body.language;
-        if (locale === null || locale === '') {
-            locale = 'vn';
-        }
-        let currCode = 'VND';
-        let vnp_Params = {};
-        vnp_Params['vnp_Version'] = '2.1.0';
-        vnp_Params['vnp_Command'] = 'pay';
-        vnp_Params['vnp_TmnCode'] = tmnCode;
-        vnp_Params['vnp_Locale'] = locale;
-        vnp_Params['vnp_CurrCode'] = currCode;
-        vnp_Params['vnp_TxnRef'] = orderId;
-        vnp_Params['vnp_OrderInfo'] = orderId;
-        vnp_Params['vnp_OrderType'] = 'other';
-        vnp_Params['vnp_Amount'] = amount * 100;
-        vnp_Params['vnp_ReturnUrl'] = returnUrl;
-        vnp_Params['vnp_IpAddr'] = ipAddr;
-        vnp_Params['vnp_CreateDate'] = createDate;
-        if (bankCode !== null && bankCode !== '') {
-            vnp_Params['vnp_BankCode'] = bankCode;
-        }
-
-        vnp_Params = sortObject(vnp_Params);
-
-        let signData = querystring.stringify(vnp_Params, { encode: false });
-        let hmac = crypto.createHmac("sha512", secretKey);
-        let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
-        vnp_Params['vnp_SecureHash'] = signed;
-        vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
-
-        // console.log(vnpUrl)
-        res.redirect(vnpUrl)
-        // return res.status(200).json(vnpUrl);
-    } catch (error) {
-        return res.status(500).json({
-            message: error.message,
-        });
+    // 2. Validate input
+    const { orderId, amount, bankCode, language } = req.body;
+    if (!orderId || !amount) {
+      return res.status(400).json({ 
+        code: 'INVALID_INPUT',
+        message: 'Thiếu orderId hoặc amount' 
+      });
     }
+
+    // 3. Tạo params VNPay
+    const vnp_Params = {
+      vnp_Version: '2.1.0',
+      vnp_Command: 'pay',
+      vnp_TmnCode: process.env.vnp_TmnCode,
+      vnp_Locale: language || 'vn',
+      vnp_CurrCode: 'VND',
+      vnp_TxnRef: orderId,
+      vnp_OrderInfo: `Thanh toan don hang ${orderId}`,
+      vnp_OrderType: 'other',
+      vnp_Amount: amount * 100,
+      vnp_ReturnUrl: process.env.vnp_ReturnUrl,
+      vnp_IpAddr: req.ip,
+      vnp_CreateDate: moment().format('YYYYMMDDHHmmss'),
+      ...(bankCode && { vnp_BankCode: bankCode })
+    };
+
+    // 4. Tạo chữ ký
+    const sortedParams = sortObject(vnp_Params);
+    const signData = querystring.stringify(sortedParams, { encode: false });
+    const hmac = crypto.createHmac("sha512", process.env.vnp_HashSecret);
+    const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
+
+    // 5. Tạo URL thanh toán
+    const paymentUrl = `${process.env.vnp_Url}?${querystring.stringify({
+      ...sortedParams,
+      vnp_SecureHash: signed
+    }, { encode: false })}`;
+
+    // 6. Trả về URL
+    return res.json({
+      code: '00',
+      message: 'Success',
+      paymentUrl
+    });
+
+  } catch (error) {
+    console.error('VNPay Controller Error:', error);
+    return res.status(500).json({
+      code: 'SERVER_ERROR',
+      message: error.message
+    });
+  }
 };
 
 export const vnPayReturn = async (req, res) => {
