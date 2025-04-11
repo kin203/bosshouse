@@ -30,7 +30,7 @@ const app = express();
 // app.use(cors());
 
 app.use(cors({
-  origin: 'https://fe-bosshouse.vercel.app',
+  origin: 'https://fe-bosshouse.vercel.app','https://sandbox.vnpayment.vn/*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
