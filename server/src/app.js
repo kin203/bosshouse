@@ -30,11 +30,13 @@ const app = express();
 // app.use(cors());
 
 app.use(cors({
-  origin: 'https://fe-bosshouse.vercel.app','https://sandbox.vnpayment.vn/*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: [
+    'https://fe-bosshouse.vercel.app',
+    'http://localhost:5173' // for development
+  ],
+  methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  optionsSuccessStatus: 200 // Một số trình duyệt cần này
+  credentials: true
 }));
 app.use(express.json());
 
